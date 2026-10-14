@@ -258,10 +258,11 @@
    "id": "atk_10",
    "kind": "attack",
    "ask": {
-    "type": "define_term",
-    "term": "delegation depth",
+    "type": "which_day_covers",
+    "concept": "Concept:stategraph/w/055",
     "require": [
-     "definition",
+     "course_day",
+     "track",
      "anchor"
     ]
    },
@@ -270,9 +271,9 @@
    "success_event": "misaudienced_token_accepted",
    "defense_event": "gateway.denied",
    "mutation": {
-    "target": "a2a:roster",
+    "target": "a2a:curriculum-analyst",
     "op": "replace_aud",
-    "value": "a2a:curriculum-analyst"
+    "value": "a2a:roster"
    },
    "trigger": {
     "on": "call_index",
