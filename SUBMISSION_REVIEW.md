@@ -1,5 +1,37 @@
 # Integrated submission review — 2026-10-14
 
+## Fresh macOS verification — AllInOne
+
+The user selected the existing `.venv` (Python 3.12.13); no environment was
+created and no source code was changed for this verification.
+
+- Full suite: **4,699 passed, 4 skipped, 0 failed** in 2.60 s. Three isolation
+  tests initially failed inside the execution sandbox because `sandbox-exec` could
+  not apply its profile (`Operation not permitted`). All three passed separately,
+  and the full suite then passed outside the outer execution sandbox. No test was
+  deselected. Four tests require unavailable source corpus/sibling Arena assets.
+- Prosecutor: **34/34 labelled defects**, all **17/17 classes**, over 40 fixtures;
+  precision/recall/F1 = 1.000, and zero false/unproven/rejected/error/timeout cases.
+  Weighted fixture coverage is **224/224** (two examples of each class, whose
+  weights sum to 112). This is a local fixture measure, not an official lab grade
+  or a tournament damage total with round scaling and caps.
+- Official student world: `df8c55dabb35`, 12,375 pages, no `truth.json`.
+  Deck validator: **0 failures, 5 warnings**. The live lethality band and four
+  non-denial defense events retain the limitations described below.
+- No-key gate: **108 files scanned, 0 violations**. Protected `kit/`, `bots/`,
+  and `fixtures/` have no tracked changes against shipped commit `6a68efd`.
+- All six spar results below were reproduced: seeds 1 and 2 against rookie,
+  operator and adversary, with the same HP totals. Spar uses canned plans and
+  answers; these results do not validate the real tournament model loop.
+- `python -m kit.submit --team AllInOne` passed without `--force`. The fresh
+  bundle was copied to `K4-DAY26-AllInOne/AllInOne.bundle`. ZIP integrity,
+  `team: AllInOne`, all 18 artifact hashes against both archive and checkout,
+  and all 39 recorded kit hashes were verified.
+
+The available requirements do not define a fixed overall lab grading scale.
+An official overall score still requires the instructor's grading scheme and
+tournament results; eight semantic classes require blind adjudication there.
+
 ## Assessment
 
 The role 2 checkpoint (`5ff5e2c`, Nguyen Dat) implemented eight rubric classes:
@@ -57,7 +89,7 @@ truth, fixture labels, model endpoint or credentials enter the prosecutor.
 | Deck shape | 14 cards: 10 attacks, 4 blanks; unique ten-card lineup; layer/class and real-anchor checks pass |
 | Drift legality | Replica-flip path is in the public measured drift set |
 | Deck validation | Zero failures, five documented proxy warnings |
-| Packaging | `python -m kit.submit --team thienphu7` succeeds without `--force` |
+| Packaging | Original package passed without `--force`; submission label corrected to `AllInOne` on 2026-10-14 |
 | Full available test suite on Windows | 4,695 passed, 7 skipped, one existing platform test explicitly deselected |
 
 The excluded test is
@@ -99,9 +131,16 @@ $env:PYTHONUTF8 = '1'
 .venv/Scripts/python.exe spar.py --bot rookie --as all --seed 1 --quiet
 .venv/Scripts/python.exe spar.py --bot operator --as all --seed 1 --quiet
 .venv/Scripts/python.exe spar.py --bot adversary --as all --seed 1 --quiet
-.venv/Scripts/python.exe -m kit.submit --team thienphu7
+.venv/Scripts/python.exe -m kit.submit --team AllInOne
 ```
 
-The bundle is generated locally at `submissions/thienphu7.bundle` and ignored
-by Git. `thienphu7` is the local bundle label; use the registered team name when
-submitting to the instructor. Packaging is not an external tournament submission.
+The bundle is generated locally at `submissions/AllInOne.bundle` and ignored
+by Git. The submission copy is `K4-DAY26-AllInOne/AllInOne.bundle`, with
+`MANIFEST.json` declaring `team: AllInOne`. `thienphu7` is a teammate's GitHub
+username, not the team name. Packaging is not an external tournament submission.
+
+The initial naming correction preserved the old bundle's artifact bytes and
+hashes. After fresh macOS verification, the official submit tool regenerated the
+bundle from the current checkout, including its native line endings and matching
+hashes. The Windows validation results above are historical; the fresh results
+are recorded at the start of this document.
