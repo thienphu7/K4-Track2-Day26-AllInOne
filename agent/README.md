@@ -21,13 +21,23 @@ Gateway không thấy kết quả của lệnh đang quyết định; các mutat
 chạy phải được kiểm tra tại phía nhận kết quả, không thể chặn bằng dấu hiệu
 chỉ tồn tại trên outgoing command.
 
-`guardrails.py` cung cấp kiểm tra grounding, tín hiệu injection, che fragment
+`guardrails.py` cung cấp kiểm tra grounding (kể cả span/replica-agnostic citation), tín hiệu injection, che fragment
 riêng tư do caller cung cấp, che secret assignment và kiểm tra phương trình
 số học đơn giản. `prepare_answer` kiểm tra citation, required fields, số học và
 nội dung riêng tư, trả abstention khi không đủ bằng chứng an toàn. **Caller
 lắp ráp ANSWER phải gọi helper này**; bộ kit không có callback ANSWER cho gateway.
 Kiểm tra phương trình không chứng minh số liệu đúng với nguồn. Pattern injection
 không thay thế việc đọc hiểu và không bảo đảm phát hiện mọi cách diễn đạt.
+
+`agent.defender.DefenderAgent` mở rộng loop chuẩn để gọi `prepare_answer` trước
+khi ANSWER tới environment. Nó chỉ dùng anchors/private fragments từ observation
+thực của exchange, kiểm tra required fields (kể cả nested field), và che dữ liệu
+riêng tư cả trong structured answer. Truyền nội dung `prompt.md` qua
+`defensive_prompt`; `system_prompt` vẫn phải là prompt chuẩn của harness.
+Environment vẫn là nơi thực thi gateway có thẩm quyền. Spar dựng sẵn không dùng adapter này.
+
+Gateway dự toán đúng mặc định 5 hàng của `slides.query`, chuẩn hóa `limit` dạng
+chuỗi số từ model và từ chối limit sai trước khi chi credit.
 
 `strategy.py` và `telemetry.py` giữ nguyên helper có sẵn; gateway sử dụng helper
 successor/catalog trong strategy. Telemetry chỉ phục vụ quan sát nội bộ.
@@ -42,3 +52,4 @@ Spar dùng tool plan và ANSWER dựng sẵn, không chạy `prompt.md`/`prepare
 Chi phí dự toán có thể khác số hàng thực tế; `ctx.credits` là số dư có thẩm quyền.
 
 Kết quả kiểm thử và ranh giới bàn giao: xem `agent/VALIDATION.md`.
+Kết quả tích hợp hai role sau cùng: xem `SUBMISSION_REVIEW.md` ở gốc repo.

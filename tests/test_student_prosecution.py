@@ -3,12 +3,9 @@ import builtins
 import pytest
 from eval.prosecute import (prosecute, load_fixtures, score_prosecutor, family_of,
                            _causal_event, _hook_authority_exceeded, _hook_wasteful,
-                           _hook_wrong_answer)
+                           _hook_wrong_answer, CLASSES)
 
-IMPLEMENTED = {
-    "enforcement_failure", "write_violation", "protocol_misuse", "wrong_answer",
-    "fabricated_citation", "authority_exceeded", "privacy_leak", "wasteful",
-}
+IMPLEMENTED = CLASSES
 
 
 @pytest.fixture(scope="module")

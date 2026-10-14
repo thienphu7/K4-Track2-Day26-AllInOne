@@ -87,7 +87,7 @@ def test_roster_declared_skills_admit_the_documented_wire_tool():
 def test_read_scope_and_budget_are_enforced():
     assert Gateway(context(scopes=frozenset())).decide(command()).verdict == "deny"
     assert Gateway(context(credits=1)).decide(command()).verdict == "deny"
-    assert Gateway(context(round=10, credits=2)).decide(command()).verdict == "forward"
+    assert Gateway(context(round=10, credits=2)).decide(command(args={"q": "mcp", "limit": 1})).verdict == "forward"
 
 
 def write_command(**changes):

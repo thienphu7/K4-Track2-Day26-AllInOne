@@ -1,5 +1,8 @@
 # Role 1 validation — 2026-10-14
 
+This is the historical role 1 checkpoint. Role 2 has since been integrated;
+the current combined results and answer adapter are in `SUBMISSION_REVIEW.md`.
+
 ## Scope and handoff
 
 Role 1 owns the defensive gateway, answer safety helpers, defensive prompt,

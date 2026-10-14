@@ -359,10 +359,20 @@ class Gateway:
                      if r > self.ctx.round - window]
             if len(calls) >= allowed:
                 return self.deny(cmd, "tool rate window exhausted")
-        routed = replace(cmd, server=server, tool=tool, fields=fields, headers=headers)
+        args = dict(cmd.args)
+        rows = 1
+        if spec.row_weight:
+            # slides.query defaults to five rows in the real server. The
+            # canonical action grammar represents explicit limits as strings.
+            limit = args.get("limit", 5)
+            if isinstance(limit, str) and len(limit) <= 6 and limit.isdecimal():
+                limit = int(limit)
+                args["limit"] = limit
+            if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+                return self.deny(cmd, "row limit must be a positive integer")
+            rows = limit
+        routed = replace(cmd, server=server, tool=tool, fields=fields, headers=headers, args=args)
         call = self._to_tool_call(routed)
-        limit = cmd.args.get("limit", 1)
-        rows = limit if isinstance(limit, int) and not isinstance(limit, bool) and limit > 0 else 1
         estimated = cost_of(call, n_rows=rows)
         # Preserve five credits for each remaining round; actual ctx.credits wins.
         reserve = max(0, 10 - self.ctx.round) * 5

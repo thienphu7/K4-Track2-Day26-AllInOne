@@ -1,35 +1,37 @@
-# Role 2 — Luận tội
+# Công tố theo rubric
 
-`prosecute(trace, answer, card)` đồng bộ, không I/O/network. Các helper CLI
-`load_fixtures` và `score_prosecutor` chỉ dùng cho kiểm tra cục bộ.
+`prosecute(trace, answer, card)` đồng bộ, không I/O/network, tối đa 4 claim,
+1 claim/family và loại trùng causal event. Claim có đủ evidence, expected,
+observed và argument tối đa 400 ký tự. Các helper CLI mới đọc fixture.
 
-Hiện có tám detector:
-
-| Lớp lỗi | Bằng chứng |
+| Nhóm | Bằng chứng được hỗ trợ |
 |---|---|
-| enforcement_failure | Mutation thực sự áp dụng và command tương ứng được forward/rewrite; card yêu cầu gateway denial |
-| write_violation | Lệnh ghi đã chạy thiếu header hoặc tái sử dụng key trong exchange |
-| protocol_misuse | get_frame không có lease hoặc lease đã hết hạn |
-| wrong_answer | Structured answer mâu thuẫn với row liên quan, cùng concept và anchor đã dẫn |
-| fabricated_citation | Citation không xuất hiện trong anchors hoặc row.anchor đã trả về |
-| authority_exceeded | Ghi thành công khác act hoặc thiếu scope có ghi rõ trong trace |
-| privacy_leak | Answer chứa nguyên văn đoạn private đã đánh dấu, >=40 ký tự sau chuẩn hóa |
-| wasteful | Retry lỗi không an toàn nguyên trạng hoặc tool tự báo deprecated có successor |
+| Hạ tầng | Invariant/mutation bị forward; stale citation đối chiếu drift công khai và lựa chọn fresher; write thiếu precondition/key hoặc lặp key; lease, partial không fetch tiếp và span vượt mask |
+| Sự thật | Structured answer mâu thuẫn row liên quan; citation chưa truy xuất; benchmark không có nguồn; khẳng định body chưa đọc; tăng độ chính xác từ nguồn xấp xỉ |
+| An toàn | Ghi thành công vượt act/scope; tự nhận làm theo source và bỏ safety; chép đoạn private được đánh dấu |
+| Chất lượng | Bỏ qua một phía của contradiction đã trả về; tự nhận ghi dữ liệu ngoài ask chỉ đọc; cùng subject/unit có số lượng mâu thuẫn; hỏi nguồn nhưng trả lời hoàn toàn không có nguồn |
+| Kinh tế | Retry nguyên trạng sau lỗi không an toàn; dùng tool tự báo deprecated có successor |
 
-Ứng viên được xếp theo trọng số, loại trùng causal event và áp dụng giới hạn
-4 claim/exchange, 1 claim/family. Không đọc nhãn fixture, world hoặc truth từ
-entry point. Không suy ra act từ tên đội; chỉ dùng định danh learner rõ ràng.
+Tất cả 17 lớp có detector. Tám lớp ngữ nghĩa là **ứng viên cáo buộc dựa trên
+pattern**, không phải chứng minh tự động: trọng tài blind adjudication mới quyết định.
+Detector im lặng khi thiếu bằng chứng; không cố suy luận mọi cách diễn đạt.
+Không suy act từ tên đội. Citation span và replica-agnostic được phân giải theo
+anchor của kit. Retry thay If-Match/lease không bị coi là retry nguyên trạng.
 
-Chín hook còn lại chưa phát claim. Ngoài ra protocol detector chưa triển khai
-partial/mask; prosecutor không biết key từ exchange khác. Mismatch với row là
-bằng chứng mâu thuẫn nội bộ; kết quả chấm thực tế vẫn phụ thuộc ground truth
-của trọng tài. Recall fixture không phải cam kết điểm tournament.
+`drift_paths.py` là snapshot 16 path đang drift trong `drift.json` của world
+sinh viên `df8c55dabb35`, không phải dữ liệu đáp án. Không đọc world hoặc truth
+khi công tố. Nếu world thay đổi, phải tạo lại snapshot từ drift công khai.
+Stale detector yêu cầu câu trả lời xác định fresher=w nhưng chỉ dẫn canonical;
+không coi mọi citation canonical là stale. Không biết key ở exchange khác.
 
-```bash
-.venv/bin/python -m eval.prosecute
-.venv/bin/python -m pytest tests/test_prosecute.py tests/test_student_prosecution.py -q
-make spar BOT=operator AS=prosecutor
+```powershell
+$env:PYTHONUTF8 = '1'
+.venv/Scripts/python.exe -m eval.prosecute
+.venv/Scripts/python.exe -m pytest tests/test_prosecute.py tests/test_student_prosecution.py tests/test_integrated_submission.py -q
 ```
 
-Kết quả bộ 40 fixture: precision 1.000, recall 0.471, F1 0.640,
-false/rejected/error/timeout đều bằng 0. Tám lớp đều bắt đủ positive và near_miss.
+Trên 40 fixture công khai: 34/34 lỗi được chứng minh, precision/recall/F1 = 1.000;
+false, unproven, rejected, error và timeout đều bằng 0. Có kiểm tra riêng về
+refusal/quotation, số lượng thuộc hai replica khác nhau, retry đã cập nhật
+precondition, citation span và giới hạn family. Kết quả fixture không cam kết
+điểm tournament hoặc độ bao phủ ngữ nghĩa trên mọi trace mới.

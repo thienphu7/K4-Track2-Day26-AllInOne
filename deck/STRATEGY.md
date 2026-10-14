@@ -31,3 +31,11 @@ make spar BOT=adversary AS=all
 Validator trên world chính thức: 0 FAIL, 5 WARN (giới hạn kiểm tra lethality và
 bốn defense_event phi-denial đã có từ starter). Spar là mô phỏng plan dựng sẵn;
 không xác nhận chất lượng prompt hay tác dụng mọi mutation trong tournament.
+
+## Kiểm tra tích hợp
+
+Sau khi hoàn thiện prosecutor cả 17 lớp, `--as all --seed 1` cho kết quả:
+rookie 100–0, operator 100–0, adversary 72–2 (HP đội–bot). Không sửa metadata
+để dập cảnh báo của validator; không tối ưu lineup chỉ để khai thác plan dựng
+sẵn. Đây là bằng chứng chạy được trên bộ kit, không chứng minh lethality band
+của engine tournament hay lineup tối ưu với mọi đối thủ.

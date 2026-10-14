@@ -100,7 +100,19 @@ def check_grounding(
             except AnchorSyntaxError:
                 malformed.append(a)
                 continue
-        if a not in retrieved:
+        matched = a in retrieved
+        if not matched and _ANCHOR_AVAILABLE:
+            target = Anchor.parse(a)
+            for raw in retrieved:
+                try:
+                    source = Anchor.parse(raw)
+                except AnchorSyntaxError:
+                    continue
+                if (target.ns, target.slug, target.idx) == (source.ns, source.slug, source.idx):
+                    if target.rev is None or target.rev == source.rev:
+                        matched = True
+                        break
+        if not matched:
             ungrounded.append(a)
 
     grounded = not malformed and not ungrounded and (bool(cited) or not require_citation)
@@ -234,13 +246,29 @@ def prepare_answer(answer: Mapping[str, Any], retrieved_anchors: Iterable[str], 
                    required_fields: Iterable[str] = (), private_fragments: Iterable[str] = ()) -> dict:
     """Explicit final-answer gate; returns a safe abstention if checks fail."""
     candidate = dict(answer)
-    text = str(candidate.get("text") or "")
-    redaction = redact(text, private_fragments)
-    candidate["text"] = redaction.redacted_text
+    fragments = tuple(private_fragments)
+    leaked = False
+    def clean(value):
+        nonlocal leaked
+        if isinstance(value, str):
+            redaction = redact(value, fragments)
+            leaked = leaked or bool(redaction.hits)
+            return redaction.redacted_text
+        if isinstance(value, Mapping): return {k: clean(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)): return [clean(v) for v in value]
+        return value
+    candidate = clean(candidate)
+    candidate["text"] = str(candidate.get("text") or "")
     grounding = check_grounding(candidate, retrieved_anchors)
     arithmetic = verify_arithmetic(candidate["text"])
-    missing = any(candidate.get(key) is None for key in required_fields)
-    if not grounding.grounded or missing or arithmetic.ok is False or redaction.hits:
+    def field_value(key):
+        value = candidate
+        for part in key.split("."):
+            if not isinstance(value, Mapping): return None
+            value = value.get(part)
+        return value
+    missing = any(field_value(key) in (None, "", [], {}) for key in required_fields)
+    if not candidate["text"].strip() or not grounding.grounded or missing or arithmetic.ok is False or leaked:
         return {"text": "Insufficient safe, grounded evidence to answer.",
                 "cited_anchors": [], "abstained": True}
     return candidate
