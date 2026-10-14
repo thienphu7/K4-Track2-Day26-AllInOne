@@ -38,7 +38,7 @@ from agent.telemetry import RecordingGatewayContext, Telemetry
 from agent.strategy import successor_of, is_catalog_trap
 from agent.guardrails import scan_for_injected_instructions
 from kit.mcp.specs import TOOL_SPECS, A2A_PEERS, cost_of
-from kit.mcp.a2a import verify_card, verify_delegation
+from kit.mcp.a2a import SKILL_ROUTES, verify_card, verify_delegation
 
 __all__ = [
     "COMMAND_KINDS",
@@ -284,6 +284,8 @@ class Gateway:
         if any(not isinstance(k, str) for k in cmd.headers):
             return self.deny(cmd, "header names must be strings")
         headers = {k.lower(): v for k, v in cmd.headers.items()}
+        if len(headers) != len(cmd.headers):
+            return self.deny(cmd, "duplicate case-insensitive header names")
         if any(key in cmd.args for key in ("route", "_route", "replica")):
             return self.deny(cmd, "routing belongs in headers, not arguments")
         if headers.get("mcp-replica") not in (None, "w", "c"):
@@ -296,7 +298,11 @@ class Gateway:
         token = headers.get("delegation")
         if server in A2A_PEERS:
             card = self._cards.get(server, {})
-            if card.get("verified") is not True or tool not in card.get("skills", ()):
+            declared = card.get("skills", ())
+            skill_admitted = tool in declared or any(
+                SKILL_ROUTES.get(skill) == (server, tool) for skill in declared
+            )
+            if card.get("verified") is not True or not skill_admitted:
                 return self.deny(cmd, "peer/skill not admitted by trusted registry")
             if headers.get("aud") not in (server, "a2a:" + server, "mcp:" + server):
                 return self.deny(cmd, "delegation audience does not match peer")
@@ -312,10 +318,11 @@ class Gateway:
             target = cmd.args.get(key)
             if target and self._learner(target) != self._learner(self.ctx.act):
                 return self.deny(cmd, "target learner is outside caller authority")
-        target = cmd.args.get("target")
-        if target and str(target).lower().startswith("learner:"):
-            if self._learner(target) != self._learner(self.ctx.act):
-                return self.deny(cmd, "target learner is outside caller authority")
+        for key in ("target", "anchor"):
+            target = cmd.args.get(key)
+            if target and str(target).lower().startswith("learner:"):
+                if self._learner(target) != self._learner(self.ctx.act):
+                    return self.deny(cmd, "target learner is outside caller authority")
         if "wiki.read" not in self.ctx.scopes and not spec.is_write:
             return self.deny(cmd, "wiki.read scope required")
         if scan_for_injected_instructions(str(cmd.args.get("note", ""))).suspicious:

@@ -7,7 +7,7 @@ from agent.gateway import Command, Gateway
 from agent.telemetry import RecordingGatewayContext
 from agent.guardrails import (scan_for_injected_instructions, redact,
                               verify_arithmetic, prepare_answer)
-from kit.mcp.a2a import issue_card, mint_delegation
+from kit.mcp.a2a import AGENT_CARDS, issue_card, mint_delegation
 
 ANCHOR = "Frame:3f2a9c11/w/041"
 
@@ -57,6 +57,31 @@ def test_body_cannot_choose_route(args):
 def test_explicit_replica_header_is_preserved():
     result = Gateway(context()).decide(command(headers={"Mcp-Replica": "c"}))
     assert result.call.headers["mcp-replica"] == "c"
+
+
+@pytest.mark.parametrize("headers", [
+    {"Mcp-Replica": "c", "mcp-replica": "w"},
+    {"Aud": "roster", "aud": "curriculum-analyst"},
+])
+def test_ambiguous_headers_are_denied(headers):
+    assert Gateway(context()).decide(command(headers=headers)).verdict == "deny"
+
+
+def test_private_learner_anchor_is_authorized_against_act():
+    gateway = Gateway(context())
+    own = command("registry", "provenance", args={"anchor": "Learner:sv-0417"})
+    assert gateway.decide(own).verdict == "forward"
+    other = replace(own, args={"anchor": "Learner:sv-0392"})
+    assert gateway.decide(other).verdict == "deny"
+
+
+def test_roster_declared_skills_admit_the_documented_wire_tool():
+    gateway = Gateway(context())
+    gateway.note_card("roster", AGENT_CARDS["roster"].to_dict())
+    own = command("roster", "lookup_learner", kind="a2a",
+                  args={"learner": "Learner:sv-0417"}, headers={"aud": "a2a:roster"})
+    assert gateway.decide(own).verdict == "forward"
+    assert gateway.decide(replace(own, args={"learner": "Learner:sv-0392"})).verdict == "deny"
 
 
 def test_read_scope_and_budget_are_enforced():

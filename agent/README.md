@@ -9,6 +9,8 @@
 - Kiểm tra read/write scope, lease sống từ context, If-Match, key ghi duy nhất.
 - Chỉ cho ghi với provenance khớp trong vòng hiện tại; tiêu thụ provenance sau khi cho phép ghi.
 - Kiểm tra card/skill/audience; card có chữ ký được xác minh bằng `verify_card`.
+- Ánh xạ skill `role_of`/`who_enrolled` của roster sang wire tool `lookup_learner`.
+- Từ chối header trùng tên sau khi chuẩn hóa chữ thường và anchor của learner khác.
 - Khi có signed delegation, kiểm tra chữ ký, act, audience, expiry và replay.
 - Giới hạn cửa sổ rate và dự toán chi phí; giữ 5 credit cho mỗi vòng còn lại.
 
@@ -38,3 +40,5 @@ make spar BOT=operator AS=defender
 
 Spar dùng tool plan và ANSWER dựng sẵn, không chạy `prompt.md`/`prepare_answer`.
 Chi phí dự toán có thể khác số hàng thực tế; `ctx.credits` là số dư có thẩm quyền.
+
+Kết quả kiểm thử và ranh giới bàn giao: xem `agent/VALIDATION.md`.
